@@ -12,5 +12,7 @@ user-agents==2.2.0
 # which Render's native runtime cannot apt-install; only swap it in if you move
 # to Docker.)
 PyMySQL==1.1.1
+# Required by PyMySQL for MySQL 8's caching_sha2_password auth method.
+cryptography==43.0.1
 gunicorn==23.0.0
 whitenoise==6.7.0
