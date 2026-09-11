@@ -1,0 +1,340 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #f7f4ee;
+    color: #1b3b2b;
+    /* Stop horizontal page scroll caused by wide tables/rows on phones */
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Make inputs comfortable to tap on phones (prevents iOS zoom-on-focus) */
+@media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+/* Fixed-position modals shouldn't inherit page padding on phones */
+@media (max-width: 640px) {
+    .fixed.inset-0 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+/* Tables scroll inside their card instead of pushing the page sideways */
+table {
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
+/* Thin, unobtrusive scrollbars for horizontal tab strips */
+.overflow-x-auto {
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+@page {
+    size: A4;
+    margin: 0;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-area,
+    .print-area * {
+        visibility: visible;
+    }
+
+    .print-area .print-hide {
+        display: none !important;
+    }
+
+    /* Invoice always fills one full A4 sheet — no browser header/footer */
+    .print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        display: flex;
+        flex-direction: column;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+    }
+
+    /* Invoice content fills the page; totals + signature stick to the bottom */
+    .print-area > div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .print-area .invoice-bottom {
+        margin-top: auto !important;
+    }
+}
+
+/* ============================================================
+   GLOBAL THEME — warm cream light mode (default) + forest green
+   These remap the slate utility classes used across every page,
+   so the whole app follows the Saadanam brand without touching
+   each component.
+   ============================================================ */
+
+/* Surfaces */
+.bg-slate-50 {
+    background-color: #f7f4ee !important;
+}
+
+.bg-slate-50\/50 {
+    background-color: #f1ecdf !important;
+}
+
+.bg-slate-100 {
+    background-color: #ece6d8 !important;
+}
+
+.bg-slate-200 {
+    background-color: #e0d9c8 !important;
+}
+
+.bg-slate-900 {
+    background-color: #1b3b2b !important;
+}
+
+/* Borders */
+.border-slate-100 {
+    border-color: #eae4d6 !important;
+}
+
+.border-slate-200 {
+    border-color: #e0d9c8 !important;
+}
+
+.border-slate-300 {
+    border-color: #d3cbb6 !important;
+}
+
+/* Text */
+.text-slate-800 {
+    color: #1b3b2b !important;
+}
+
+.text-slate-700 {
+    color: #33503c !important;
+}
+
+.text-slate-600 {
+    color: #4c6654 !important;
+}
+
+.text-slate-500 {
+    color: #64796a !important;
+}
+
+.text-slate-400 {
+    color: #8b9a8e !important;
+}
+
+.text-slate-300 {
+    color: #aebba0 !important;
+}
+
+/* Hover surfaces */
+.hover\:bg-slate-50:hover {
+    background-color: #f2ede1 !important;
+}
+
+.hover\:bg-slate-100:hover {
+    background-color: #ece6d8 !important;
+}
+
+.hover\:bg-slate-200:hover {
+    background-color: #e0d9c8 !important;
+}
+
+.hover\:bg-slate-800:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Old indigo button hovers → light green */
+.hover\:bg-indigo-700:hover {
+    background-color: #16a34a !important;
+}
+
+/* Old blue accents (stat chips, status badges, support bubbles) → green */
+.bg-blue-50 {
+    background-color: #e6f0e1 !important;
+}
+
+.text-blue-600 {
+    color: #2c7a4b !important;
+}
+
+/* Brand-colored scrollbar thumb for dark rails (e.g. held-bill tabs) */
+/* Form controls */
+input,
+select,
+textarea {
+    background-color: #f4f0e6;
+    border-color: #ddd6c4;
+    color: #1b3b2b;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #8b9a8e;
+}
+
+/* ============================================================
+   DARK MODE (only when the theme toggle is pressed) — forest
+   green tinted palette so the brand carries through.
+   ============================================================ */
+
+.dark body {
+    background-color: #0a120c;
+    color: #e8f0e9;
+}
+
+.dark .bg-white {
+    background-color: #101d15 !important;
+}
+
+.dark .bg-slate-950 {
+    background-color: #0a120c !important;
+}
+
+.dark .bg-slate-900 {
+    background-color: #101d15 !important;
+}
+
+.dark .bg-slate-800 {
+    background-color: #16281d !important;
+}
+
+.dark .bg-slate-50 {
+    background-color: #0a120c !important;
+}
+
+.dark .bg-slate-50\/50 {
+    background-color: #16281d !important;
+}
+
+.dark .bg-slate-100 {
+    background-color: #16281d !important;
+}
+
+.dark .bg-slate-200 {
+    background-color: #1e3a2a !important;
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-slate-700,
+.dark .border-slate-800 {
+    border-color: #1e3a2a !important;
+}
+
+.dark .text-slate-100 {
+    color: #e8f0e9 !important;
+}
+
+.dark .text-slate-300 {
+    color: #cddcd0 !important;
+}
+
+.dark .text-slate-800,
+.dark .text-slate-700 {
+    color: #e8f0e9 !important;
+}
+
+.dark .text-slate-500,
+.dark .text-slate-600 {
+    color: #a9bfae !important;
+}
+
+.dark .text-slate-400 {
+    color: #6f8a76 !important;
+}
+
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-slate-800:hover {
+    background-color: #16281d !important;
+}
+
+.dark .hover\:bg-indigo-700:hover {
+    background-color: #16a34a !important;
+}
+
+.dark .bg-blue-50 {
+    background-color: #16281d !important;
+}
+
+.dark .text-blue-600 {
+    color: #7ec99a !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #16281d !important;
+    border-color: #24402f !important;
+    color: #e8f0e9 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #6f8a76 !important;
+}
+
+/* Print: the invoice must always print on white, even when dark mode is on.
+   Placed after the .dark overrides so these win the cascade at print time. */
+@media print {
+    .print-area,
+    .print-area .bg-white {
+        background-color: #ffffff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-area .bg-slate-50,
+    .print-area .bg-slate-100 {
+        background-color: #ffffff !important;
+    }
+
+    .print-area .text-slate-800 { color: #1e293b !important; }
+    .print-area .text-slate-700 { color: #334155 !important; }
+    .print-area .text-slate-600 { color: #475569 !important; }
+    .print-area .text-slate-500 { color: #64748b !important; }
+    .print-area .text-slate-400 { color: #94a3b8 !important; }
+    .print-area .text-slate-300 { color: #cbd5e1 !important; }
+
+    .print-area .border-slate-100 { border-color: #f1f5f9 !important; }
+    .print-area .border-slate-200 { border-color: #e2e8f0 !important; }
+
+    .print-area input,
+    .print-area select,
+    .print-area textarea {
+        background-color: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+}

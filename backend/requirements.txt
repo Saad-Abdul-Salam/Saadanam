@@ -1,0 +1,16 @@
+Django==5.0.9
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.4.0
+python-decouple==3.8
+Pillow==10.4.0
+user-agents==2.2.0
+
+# --- production deployment (Render) ---
+# MySQL driver: PyMySQL is pure Python — installs cleanly on Render with no
+# system libraries. (mysqlclient would need default-libmysqlclient-dev headers,
+# which Render's native runtime cannot apt-install; only swap it in if you move
+# to Docker.)
+PyMySQL==1.1.1
+gunicorn==23.0.0
+whitenoise==6.7.0
