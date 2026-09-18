@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer
+from .otp import can_request_otp, request_otp, check_otp, consume_otp, MAX_VERIFY_ATTEMPTS
 from apps.devices.utils import create_device_session
 
 
@@ -127,3 +128,137 @@ class ChangePasswordView(APIView):
         # just leave other sessions alone but force re-login for this device via
         # a fresh password. We rotate the user's refresh tokens by creating a new one.
         return Response({"message": "Password changed successfully."})
+
+
+class PasswordResetRequestView(APIView):
+    """POST /auth/password-reset/request/ with {email}.
+
+    Always answers the same success message whether or not the email is
+    registered, so the endpoint can't be used to enumerate accounts.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get('email') or '').strip().lower()
+        if not email:
+            return Response(
+                {"error": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        generic_ok = {"message": "If that email is registered, a reset code has been sent."}
+
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            # Same response as a real send — don't leak which emails exist.
+            return Response(generic_ok)
+
+        if not can_request_otp(email):
+            return Response(
+                {"error": "Too many reset requests. Please wait 10 minutes and try again."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        try:
+            request_otp(email)
+        except RuntimeError:
+            # DRF has no constant for 502 — send as a plain int.
+            return Response(
+                {"error": "Could not send the reset email right now. Please try again in a moment."},
+                status=502,
+            )
+
+        return Response(generic_ok)
+
+
+class PasswordResetVerifyView(APIView):
+    """POST /auth/password-reset/verify/ with {email, otp}."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get('email') or '').strip().lower()
+        otp = (request.data.get('otp') or '').strip()
+
+        if not email or not otp:
+            return Response(
+                {"error": "Email and otp are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ok, remaining = check_otp(email, otp)
+        if ok:
+            return Response({"message": "OTP verified. You can now set a new password."})
+
+        if remaining > 0:
+            return Response(
+                {"error": f"Invalid or expired code. {remaining} attempt(s) left before a new code is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # remaining == 0: either expired/never requested, or the retry budget
+        # was exhausted and the stored OTP was just wiped.
+        return Response(
+            {"error": "Invalid or expired code. Please request a new one."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """POST /auth/password-reset/confirm/ with {email, otp, new_password, confirm_password}.
+
+    Re-validates the OTP (without consuming it) and only deletes the cached
+    code after the password has actually been changed, so a mistyped
+    confirmation password doesn't force the user to request a fresh OTP.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = (request.data.get('email') or '').strip().lower()
+        otp = (request.data.get('otp') or '').strip()
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+
+        if not all([email, otp, new_password, confirm_password]):
+            return Response(
+                {"error": "email, otp, new_password and confirm_password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"error": "Passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(new_password) < 8:
+            return Response(
+                {"error": "New password must be at least 8 characters."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ok, remaining = check_otp(email, otp)
+        if not ok:
+            if remaining > 0:
+                return Response(
+                    {"error": f"Invalid or expired code. {remaining} attempt(s) left before a new code is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                {"error": "Invalid or expired code. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            # Shouldn't normally happen (request only sends OTPs for known
+            # emails), but a stale/foreign email + valid-looking OTP lands here.
+            return Response(
+                {"error": "Invalid or expired code. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=['password'])
+        consume_otp(email)
+
+        return Response({"message": "Password has been reset. You can now log in with your new password."})

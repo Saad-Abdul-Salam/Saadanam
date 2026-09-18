@@ -67,6 +67,9 @@ Base URL: `/api/`
 - `GET /auth/me/` — current user
 - `PATCH /auth/me/` — update profile
 - `POST /auth/change-password/` — change password
+- `POST /auth/password-reset/request/` — forgot password: email a 6-digit OTP (Resend)
+- `POST /auth/password-reset/verify/` — verify the OTP
+- `POST /auth/password-reset/confirm/` — set the new password (OTP + confirmation)
 
 **Shops**
 - `GET/PATCH /shops/me/` — owner's own shop / settings (logo upload supported)
@@ -150,8 +153,9 @@ register/login/refresh require a Bearer token.
 
 **Public**
 - `/` — Landing page (animated intro)
-- `/login` — Login
+- `/login` — Login ("Forgot password?" → `/forgot-password`)
 - `/register` — Registration (shop details + tax settings)
+- `/forgot-password` — multi-step reset: email → 6-digit OTP → new password
 
 **Shop owner** (role-gated)
 - `/shop/dashboard` — stat cards + recent sales + Quick Price Update modal
@@ -245,6 +249,7 @@ Copy the root `.env` (see `.env` in the repo) and adjust if needed:
 | `DJANGO_DEBUG` | debug mode | `True` |
 | `DJANGO_ALLOWED_HOSTS` | comma-separated hosts | `localhost,127.0.0.1` |
 | `CORS_ALLOWED_ORIGINS` | comma-separated frontend origins | `http://localhost:5173,http://127.0.0.1:5173` |
+| `RESEND_API_KEY` | Resend API key for password-reset OTP emails | — |
 | `MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_HOST` / `MYSQL_PORT` | production DB (see below) | — |
 
 ### Switching to MySQL (production)
@@ -299,12 +304,16 @@ targeting.
   other devices, admins can force-logout any shop's session.
 - **Settings** — business info, tax config, shop logo upload, profile edit,
   and password change.
+- **Forgot / reset password** — email OTP (Resend) with cache-backed storage:
+  10-minute codes, max 3 requests per email per 10 min, max 5 wrong verify
+  attempts before a fresh code is required, no user enumeration.
 
 ---
 
 ## Remaining Work (non-Docker)
 
-- [ ] Email verification / password reset flow (needs an email provider).
+- [x] Password reset flow via email OTP (Resend) — shipped; email verification
+      for new signups still pending.
 - [ ] Per-shop notification history on the owner side is read-only — no push
       or in-app realtime yet.
 - [ ] Profit reports assume latest-purchase-cost as product cost; weighted

@@ -104,6 +104,17 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ---------- Cache ----------
+# Default per-process memory cache. Only used for transient things right now
+# (password-reset OTPs + rate-limit counters) — swapping in Redis/Memcached
+# later is a settings-only change and needs no code changes.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'saadanam-default',
+    }
+}
+
 # ---------- DRF ----------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -131,3 +142,6 @@ CORS_ALLOWED_ORIGINS = config(
     default='http://localhost:5173,http://127.0.0.1:5173'
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
+
+# ---------- Resend (transactional email — password-reset OTP) ----------
+RESEND_API_KEY = config('RESEND_API_KEY', default='')

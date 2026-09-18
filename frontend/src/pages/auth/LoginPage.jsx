@@ -86,13 +86,12 @@ export default function LoginPage() {
                                     />
                                     Remember me
                                 </label>
-                                <a
-                                    href="mailto:support@saadanam.app?subject=Password%20reset%20request"
-                                    title="Email support to reset your password"
+                                <Link
+                                    to="/forgot-password"
                                     className="text-[#1b3b2b] dark:text-[#e8f0e9] hover:underline"
                                 >
                                     Forgot password?
-                                </a>
+                                </Link>
                             </div>
 
                             {error && <p className="text-sm text-red-500">{error}</p>}

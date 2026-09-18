@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/auth/LandingPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
 
 // platform-admin pages
@@ -40,6 +41,7 @@ function App() {
             {/* auth */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             {/* platform admin */}
             <Route path="/admin/dashboard" element={<ProtectedRoute allowedRole="platform_admin"><AdminDashboardPage /></ProtectedRoute>} />
