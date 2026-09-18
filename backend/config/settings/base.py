@@ -143,5 +143,10 @@ CORS_ALLOWED_ORIGINS = config(
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
-# ---------- Resend (transactional email — password-reset OTP) ----------
+# ---------- Resend (transactional email — password-reset OTP, approvals) ----------
 RESEND_API_KEY = config('RESEND_API_KEY', default='')
+
+# Public frontend base URL — used to build links inside transactional emails
+# (e.g. the login link in the account-approved email). Set to the production
+# domain in prod; defaults to the local Vite dev server.
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')

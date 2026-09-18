@@ -13,12 +13,10 @@ against abuse:
 
 import secrets
 
-import resend
-from decouple import config
 from django.core.cache import cache
 
-# Sandbox sender — swap for a real address once a domain is verified in Resend.
-OTP_SENDER = 'Saadanam <onboarding@resend.dev>'
+from apps.core.emails import send_email
+
 OTP_SUBJECT = 'Your Saadanam password reset code'
 
 OTP_LENGTH = 6
@@ -58,21 +56,14 @@ def request_otp(email):
     API returns an explicit error instead of pretending the OTP is on its way.
     """
     otp = ''.join(secrets.choice('0123456789') for _ in range(OTP_LENGTH))
-
-    params = {
-        'from': OTP_SENDER,
-        'to': [email],
-        'subject': OTP_SUBJECT,
-        'text': (
-            f'Your OTP for resetting your Saadanam password is: {otp}\n\n'
-            'This code expires in 10 minutes. If you didn\'t request this, '
-            'ignore this email.'
-        ),
-    }
+    body = (
+        f'Your OTP for resetting your Saadanam password is: {otp}\n\n'
+        'This code expires in 10 minutes. If you didn\'t request this, '
+        'ignore this email.'
+    )
 
     try:
-        resend.api_key = config('RESEND_API_KEY', default='')
-        resend.Emails.send(params)
+        send_email(email, OTP_SUBJECT, body)
     except Exception as exc:  # noqa: BLE001 — network/HTTP/auth errors all count
         # Don't store the OTP if delivery failed — the user can't receive it,
         # so keeping it (and burning one of their 3 attempts) is pointless.

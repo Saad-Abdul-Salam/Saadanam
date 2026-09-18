@@ -1,12 +1,20 @@
+import logging
+
+from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.utils import timezone
 
+from apps.core.emails import send_email
 from apps.shops.models import Shop
 from apps.shops.serializers import ShopSerializer
 from apps.accounts.models import User
+
+logger = logging.getLogger(__name__)
+
+APPROVED_SUBJECT = 'Your Saadanam account has been approved'
 
 
 class IsPlatformAdmin(BasePermission):
@@ -50,7 +58,28 @@ class ApproveShopView(APIView):
         shop.owner.is_approved = True
         shop.owner.save()
 
+        self._send_approval_email(shop)
+
         return Response({"message": f"{shop.business_name} approved."})
+
+    @staticmethod
+    def _send_approval_email(shop):
+        """Best-effort confirmation email — approval must succeed even if
+        sending fails (email delivery is not guaranteed), so failures are
+        logged and swallowed."""
+        login_url = settings.FRONTEND_URL.rstrip('/') + '/login'
+        body = (
+            f'Hi {shop.owner.full_name}, your Saadanam shop owner account has '
+            f'been approved. You can now log in and start managing your shop: '
+            f'{login_url}'
+        )
+        try:
+            send_email(shop.owner.email, APPROVED_SUBJECT, body)
+        except Exception:  # noqa: BLE001 — network/HTTP/auth errors all count
+            logger.exception(
+                'Failed to send approval email for shop id=%s (owner=%s)',
+                shop.id, shop.owner.email,
+            )
 
 
 class RejectShopView(APIView):

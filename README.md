@@ -249,7 +249,8 @@ Copy the root `.env` (see `.env` in the repo) and adjust if needed:
 | `DJANGO_DEBUG` | debug mode | `True` |
 | `DJANGO_ALLOWED_HOSTS` | comma-separated hosts | `localhost,127.0.0.1` |
 | `CORS_ALLOWED_ORIGINS` | comma-separated frontend origins | `http://localhost:5173,http://127.0.0.1:5173` |
-| `RESEND_API_KEY` | Resend API key for password-reset OTP emails | — |
+| `RESEND_API_KEY` | Resend API key for transactional emails (password-reset OTP, account approval) | — |
+| `FRONTEND_URL` | Public frontend base URL used in email links | `http://localhost:5173` |
 | `MYSQL_DATABASE` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_HOST` / `MYSQL_PORT` | production DB (see below) | — |
 
 ### Switching to MySQL (production)

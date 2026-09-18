@@ -32,7 +32,7 @@ class PasswordResetFlowTests(APITestCase):
     def tearDown(self):
         clear_reset_cache()
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_full_flow(self, _send):
         # 1. request OTP
         res = self.client.post(
@@ -69,7 +69,7 @@ class PasswordResetFlowTests(APITestCase):
         self.assertTrue(self.owner.check_password('newpassword456'))
         self.assertIsNone(cache.get(OTP_KEY))
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_request_does_not_leak_registered_emails(self, _send):
         res_known = self.client.post(
             reverse('password-reset-request'), {'email': 'owner@test.com'}, format='json'
@@ -82,7 +82,7 @@ class PasswordResetFlowTests(APITestCase):
         # unknown email: no OTP ever stored
         self.assertIsNone(cache.get(otp_module.OTP_CACHE_PREFIX + 'nobody@test.com'))
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_wrong_otp_fails_but_is_not_deleted(self, _send):
         self.client.post(reverse('password-reset-request'), {'email': 'owner@test.com'}, format='json')
         res = self.client.post(
@@ -93,7 +93,7 @@ class PasswordResetFlowTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIsNotNone(cache.get(OTP_KEY))
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_confirm_password_mismatch_keeps_otp(self, _send):
         self.client.post(reverse('password-reset-request'), {'email': 'owner@test.com'}, format='json')
         stored = cache.get(OTP_KEY)
@@ -113,7 +113,7 @@ class PasswordResetFlowTests(APITestCase):
         # OTP still valid so the user can retry without re-requesting
         self.assertIsNotNone(cache.get(OTP_KEY))
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_verify_brute_force_limit(self, _send):
         self.client.post(reverse('password-reset-request'), {'email': 'owner@test.com'}, format='json')
         for _ in range(otp_module.MAX_VERIFY_ATTEMPTS):
@@ -131,7 +131,7 @@ class PasswordResetFlowTests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', return_value={'id': 'test'})
+    @mock.patch('apps.accounts.otp.send_email', return_value={'id': 'test'})
     def test_request_rate_limit(self, _send):
         for _ in range(otp_module.MAX_REQUESTS_PER_WINDOW):
             res = self.client.post(
@@ -143,7 +143,7 @@ class PasswordResetFlowTests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
-    @mock.patch.object(otp_module.resend.Emails, 'send', side_effect=Exception('Resend down'))
+    @mock.patch('apps.accounts.otp.send_email', side_effect=Exception('Resend down'))
     def test_email_failure_returns_error(self, _send):
         res = self.client.post(
             reverse('password-reset-request'), {'email': 'owner@test.com'}, format='json'
